@@ -30,6 +30,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -66,6 +67,8 @@ UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 uint8_t live_view_check_counter = 0;
+char live_message[256];
+uint16_t i2c_device = 0;
 
 /* USER CODE END PV */
 
@@ -135,16 +138,28 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
+  Error_Handler(); // init live_message
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint32_t delay;
   while (1)
   {
     live_view_check_counter++;
     HAL_GPIO_TogglePin(LED0_PIN_GPIO_Port, LED0_PIN_Pin);
-    HAL_Delay(500);
+
+    delay = 100;
+    for( uint8_t i=0; i<128; i++ ) {
+      if( HAL_I2C_IsDeviceReady(&hi2c1, i<<1, 1, 10) == HAL_OK ) {
+        i2c_device = i;
+        delay = 1000;
+        break;
+      }
+    }
+
+    HAL_Delay(delay);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -721,6 +736,15 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+  static int num = 0;
+  num++;
+  snprintf(live_message, sizeof(live_message),
+      "Num: %d, SysClock: %lu, I2CErr: %lu, I2CStat: 0x%x, short/int/long sz: %u/%u/%u\n",
+      num,
+      HAL_RCC_GetSysClockFreq(),
+      HAL_I2C_GetError(&hi2c1),
+      HAL_I2C_GetState(&hi2c1), // HAL_I2C_StateTypeDef enum
+      sizeof(short), sizeof(int), sizeof(long));
 
   /* USER CODE END Error_Handler_Debug */
 }
