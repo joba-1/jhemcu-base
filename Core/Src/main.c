@@ -3,7 +3,14 @@
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
+  * @author         : Joachim Banzhaf
   ******************************************************************************
+  * @attention
+  *
+  * This file will be regenerated for other configurations (chips, pins, ...)
+  * by CubeMX. Be sure to place your code only inside USER CODE BEGIN/END
+  * comment sections or you may loose your changes.
+  *
   * @attention
   *
   * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
@@ -58,6 +65,7 @@ UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
+uint8_t live_view_check_counter = 0;
 
 /* USER CODE END PV */
 
@@ -134,6 +142,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    live_view_check_counter++;
     HAL_GPIO_TogglePin(LED0_PIN_GPIO_Port, LED0_PIN_Pin);
     HAL_Delay(500);
     /* USER CODE END WHILE */
