@@ -135,10 +135,6 @@ void Error_Handler(void);
 #define UART5_RX_PIN_GPIO_Port GPIOD
 #define SPI3_MOSI_PIN_Pin GPIO_PIN_5
 #define SPI3_MOSI_PIN_GPIO_Port GPIOB
-#define I2C1_SCL_Pin GPIO_PIN_6
-#define I2C1_SCL_GPIO_Port GPIOB
-#define I2C1_SDA_Pin GPIO_PIN_7
-#define I2C1_SDA_GPIO_Port GPIOB
 #define PINIO2_PIN_Pin GPIO_PIN_9
 #define PINIO2_PIN_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
