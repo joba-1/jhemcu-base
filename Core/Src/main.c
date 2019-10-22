@@ -44,8 +44,6 @@
 ADC_HandleTypeDef hadc3;
 DMA_HandleTypeDef hdma_adc3;
 
-I2C_HandleTypeDef hi2c1;
-
 SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
 SPI_HandleTypeDef hspi3;
@@ -75,7 +73,6 @@ static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USART6_UART_Init(void);
-static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -125,27 +122,36 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
-  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  GPIO_PinState pin_state = GPIO_PIN_RESET;
+  
   while (1)
   {
     HAL_GPIO_TogglePin(LED0_PIN_GPIO_Port, LED0_PIN_Pin);
 
-    // Find any I2C device
-    uint8_t found = 0;
-    for (uint8_t i = 0; i < 128; i++) {
-      if (HAL_I2C_IsDeviceReady(&hi2c1, i << 1, 10, 10) == HAL_OK) {
-        found = 1;
-        break;
-      }
+    pin_state = (pin_state == GPIO_PIN_RESET) ? GPIO_PIN_SET : GPIO_PIN_RESET;
+    HAL_GPIO_WritePin(SDA1_GPIO_Port, SDA1_Pin, pin_state);
+    HAL_GPIO_WritePin(SCL1_GPIO_Port, SCL1_Pin, pin_state);
+    HAL_GPIO_WritePin(SDA3_GPIO_Port, SDA3_Pin, pin_state);
+    HAL_GPIO_WritePin(SCL3_GPIO_Port, SCL3_Pin, pin_state);
+
+    HAL_Delay(100);
+
+    // Check pin status
+    uint8_t match = (HAL_GPIO_ReadPin(SDA1_GPIO_Port, SDA1_Pin) == pin_state
+        && HAL_GPIO_ReadPin(SCL1_GPIO_Port, SCL1_Pin) == pin_state
+        && HAL_GPIO_ReadPin(SDA3_GPIO_Port, SDA3_Pin) == pin_state
+        && HAL_GPIO_ReadPin(SCL3_GPIO_Port, SCL3_Pin) == pin_state);
+
+    // Blink faster if status not as expected
+    if (match) {
+      HAL_Delay(900);
     }
-    // Blink faster if no I2C device is found
-    HAL_Delay(found ? 1000 : 100);
 
     /* USER CODE END WHILE */
 
@@ -193,15 +199,13 @@ void SystemClock_Config(void)
   }
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
                               |RCC_PERIPHCLK_USART3|RCC_PERIPHCLK_USART6
-                              |RCC_PERIPHCLK_UART4|RCC_PERIPHCLK_UART5
-                              |RCC_PERIPHCLK_I2C1;
+                              |RCC_PERIPHCLK_UART4|RCC_PERIPHCLK_UART5;
   PeriphClkInitStruct.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInitStruct.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInitStruct.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
   PeriphClkInitStruct.Uart4ClockSelection = RCC_UART4CLKSOURCE_PCLK1;
   PeriphClkInitStruct.Uart5ClockSelection = RCC_UART5CLKSOURCE_PCLK1;
   PeriphClkInitStruct.Usart6ClockSelection = RCC_USART6CLKSOURCE_PCLK2;
-  PeriphClkInitStruct.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -255,52 +259,6 @@ static void MX_ADC3_Init(void)
   /* USER CODE BEGIN ADC3_Init 2 */
 
   /* USER CODE END ADC3_Init 2 */
-
-}
-
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C1_Init(void)
-{
-
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00303D5B;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Analogue filter 
-  */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Digital filter 
-  */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
 
 }
 
@@ -667,16 +625,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, FLASH_CS_PIN_Pin|PINIO1_PIN_Pin|BEEPER_PIN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, FLASH_CS_PIN_Pin|PINIO1_PIN_Pin|BEEPER_PIN_Pin|SDA3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GYRO_2_CS_PIN_Pin|LED0_PIN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GYRO_2_CS_PIN_Pin|SCL3_Pin|LED0_PIN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GYRO_1_CS_PIN_Pin|PINIO2_PIN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GYRO_1_CS_PIN_Pin|SCL1_Pin|SDA1_Pin|PINIO2_PIN_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : FLASH_CS_PIN_Pin PINIO1_PIN_Pin BEEPER_PIN_Pin */
-  GPIO_InitStruct.Pin = FLASH_CS_PIN_Pin|PINIO1_PIN_Pin|BEEPER_PIN_Pin;
+  /*Configure GPIO pins : FLASH_CS_PIN_Pin PINIO1_PIN_Pin BEEPER_PIN_Pin SDA3_Pin */
+  GPIO_InitStruct.Pin = FLASH_CS_PIN_Pin|PINIO1_PIN_Pin|BEEPER_PIN_Pin|SDA3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -688,15 +646,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GYRO_2_CS_PIN_Pin LED0_PIN_Pin */
-  GPIO_InitStruct.Pin = GYRO_2_CS_PIN_Pin|LED0_PIN_Pin;
+  /*Configure GPIO pins : GYRO_2_CS_PIN_Pin SCL3_Pin LED0_PIN_Pin */
+  GPIO_InitStruct.Pin = GYRO_2_CS_PIN_Pin|SCL3_Pin|LED0_PIN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GYRO_1_CS_PIN_Pin PINIO2_PIN_Pin */
-  GPIO_InitStruct.Pin = GYRO_1_CS_PIN_Pin|PINIO2_PIN_Pin;
+  /*Configure GPIO pins : GYRO_1_CS_PIN_Pin SCL1_Pin SDA1_Pin PINIO2_PIN_Pin */
+  GPIO_InitStruct.Pin = GYRO_1_CS_PIN_Pin|SCL1_Pin|SDA1_Pin|PINIO2_PIN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

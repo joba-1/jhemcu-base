@@ -119,6 +119,10 @@ void Error_Handler(void);
 #define UART6_TX_PIN_GPIO_Port GPIOC
 #define UART6_RX_PIN_Pin GPIO_PIN_7
 #define UART6_RX_PIN_GPIO_Port GPIOC
+#define SDA3_Pin GPIO_PIN_9
+#define SDA3_GPIO_Port GPIOC
+#define SCL3_Pin GPIO_PIN_8
+#define SCL3_GPIO_Port GPIOA
 #define UART1_TX_PIN_Pin GPIO_PIN_9
 #define UART1_TX_PIN_GPIO_Port GPIOA
 #define UART1_RX_PIN_Pin GPIO_PIN_10
@@ -135,6 +139,10 @@ void Error_Handler(void);
 #define UART5_RX_PIN_GPIO_Port GPIOD
 #define SPI3_MOSI_PIN_Pin GPIO_PIN_5
 #define SPI3_MOSI_PIN_GPIO_Port GPIOB
+#define SCL1_Pin GPIO_PIN_6
+#define SCL1_GPIO_Port GPIOB
+#define SDA1_Pin GPIO_PIN_7
+#define SDA1_GPIO_Port GPIOB
 #define PINIO2_PIN_Pin GPIO_PIN_9
 #define PINIO2_PIN_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
